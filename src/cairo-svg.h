@@ -51,10 +51,29 @@ typedef enum _cairo_svg_version {
     CAIRO_SVG_VERSION_1_2
 } cairo_svg_version_t;
 
+typedef cairo_status_t (*cairo_write_image_func_t) (void		  *closure,
+					      cairo_surface_t *surface,
+						  char *filename);
+
 cairo_public cairo_surface_t *
 cairo_svg_surface_create (const char   *filename,
 			  double	width_in_points,
 			  double	height_in_points);
+
+typedef struct _cairo_svg_fontfile cairo_svg_fontfile_t;
+
+cairo_public cairo_svg_fontfile_t *
+cairo_svg_fontfile_create (const char   *path);
+
+cairo_public void
+cairo_svg_fontfile_finish (cairo_svg_fontfile_t   *fontfile,
+			const char	*path);
+
+cairo_public cairo_surface_t *
+cairo_svg_surface_create_with_fontfile (const char	*filename,
+			  double	 width,
+			  double	 height,
+			  cairo_svg_fontfile_t *fontfile);
 
 cairo_public cairo_surface_t *
 cairo_svg_surface_create_for_stream (cairo_write_func_t	write_func,
@@ -72,6 +91,11 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
 
 cairo_public const char *
 cairo_svg_version_to_string (cairo_svg_version_t version);
+
+cairo_public void
+cairo_svg_surface_set_write_image_func (cairo_surface_t 		*surface,
+						cairo_write_image_func_t 		write_image_func,
+						void  	 *write_image_closure);
 
 CAIRO_END_DECLS
 

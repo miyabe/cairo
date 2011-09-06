@@ -47,6 +47,7 @@
 #include "cairo-surface-clipper-private.h"
 
 typedef struct cairo_svg_document cairo_svg_document_t;
+typedef struct cairo_svg_font_output cairo_svg_font_output_t;
 
 typedef struct cairo_svg_surface {
     cairo_surface_t base;
@@ -70,5 +71,10 @@ typedef struct cairo_svg_surface {
 
     cairo_bool_t force_fallbacks;
 } cairo_svg_surface_t;
+
+typedef struct _cairo_svg_fontfile {
+	char *path;
+	cairo_scaled_font_subsets_t *font_subsets;
+} cairo_svg_fontfile;
 
 #endif /* CAIRO_SVG_SURFACE_PRIVATE_H */

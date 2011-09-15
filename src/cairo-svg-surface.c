@@ -3143,6 +3143,19 @@ _cairo_svg_surface_equal_stroke(const void *key_a, const void *key_b) {
 			memcmp(&op_a->stroke_style, &op_b->stroke_style, sizeof(op_a->stroke_style)) == 0;
 }
 
+static const char utf8_skip_data[256] = {
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,1,1
+};
+
+#define UTF8_NEXT_CHAR(p) ((p) + utf8_skip_data[*(unsigned char *)(p)])
+
 static cairo_int_status_t
 _cairo_svg_surface_show_text_glyphs (void			*abstract_surface,
 				     cairo_operator_t		 op,
@@ -3283,6 +3296,15 @@ _cairo_svg_surface_show_text_glyphs (void			*abstract_surface,
     	}
 		_cairo_output_stream_printf (surface->document->text, "%c", utf8[i]);
     }
+    const unsigned char * const ustr = (const unsigned char *) utf8;
+    const unsigned char *in = ustr;
+    int n_chars = 0;
+    while (ustr + utf8_len - in > 0) {
+		n_chars++;
+		in = UTF8_NEXT_CHAR (in);
+    }
+    if (n_chars != num_clusters)
+    	_cairo_svg_end_text(surface);
 
     // for XML space and Webkit performance.
     if (_cairo_memory_stream_length(surface->document->text)  >= 300) {
@@ -3537,7 +3559,7 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 				 "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
 				 "width=\"100%%\" height=\"100%%\" "
 				 "viewBox=\"0 0 %f %f\" version=\"%s\">\n",
-				 _round(document->width, PATH_PRECISION), _round(document->height, PATH_PRECISION),
+				 _round(document->width, 1), _round(document->height, 1),
 				 _cairo_svg_internal_version_strings [document->svg_version]);
 
     fontout.font_subsets = document->font_text_subsets;

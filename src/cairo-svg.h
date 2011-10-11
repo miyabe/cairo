@@ -97,6 +97,11 @@ cairo_svg_surface_set_write_image_func (cairo_surface_t 		*surface,
 						cairo_write_image_func_t 		write_image_func,
 						void  	 *write_image_closure);
 
+cairo_public void
+cairo_svg_surface_link(cairo_surface_t *surface,
+		const char *uri,
+		double x, double y, double width, double height);
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_SVG_SURFACE */

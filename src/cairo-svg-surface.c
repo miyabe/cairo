@@ -2105,6 +2105,9 @@ _cairo_svg_surface_end_style(cairo_svg_document_t *document,
 	cairo_svg_style *entry;
 	_cairo_memory_stream_destroy(css, &style.style, &style.length);
 
+	if (style.length == 0) {
+		return NULL;
+	}
 	style.base.hash = _CAIRO_HASH_INIT_VALUE;
 	style.base.hash = _cairo_hash_bytes(style.base.hash, style.style, style.length);
 	entry = _cairo_hash_table_lookup(document->style_to_id, &style.base);
@@ -2701,6 +2704,56 @@ _cairo_svg_surface_fill_stroke (void			*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_svg_surface_draw_pattern (cairo_svg_surface_t *surface,
+		cairo_output_stream_t *output,
+		cairo_surface_pattern_t *sp,
+		cairo_operator_t op,
+		int clip_id,
+		cairo_matrix_t *parent_matrix,
+		const char	     *extra_attributes)
+{
+	cairo_rectangle_int_t extents;
+	_cairo_surface_get_extents (sp->surface, &extents);
+    cairo_matrix_t p2u = sp->base.matrix;
+    cairo_matrix_invert (&p2u);
+    if (parent_matrix != NULL)
+	cairo_matrix_multiply (&p2u, &p2u, parent_matrix);
+
+	_cairo_svg_surface_emit_surface (surface, sp->surface, surface->document->xml_node_defs,
+			0, 0, extents.width, extents.height);
+
+	if (clip_id != -1 || extra_attributes)
+		_cairo_output_stream_printf (output, "<g", extra_attributes);
+	if (extra_attributes)
+		_cairo_output_stream_printf (output, " %s", extra_attributes);
+	if (clip_id != -1)
+		_cairo_output_stream_printf (output, " clip-path=\"url(#clip%d)\"", clip_id);
+	if (clip_id != -1 || extra_attributes)
+		_cairo_output_stream_printf (output, ">", extra_attributes);
+	_cairo_output_stream_printf (output, "<g");
+	cairo_output_stream_t *css = _cairo_svg_surface_start_style ();
+	_cairo_svg_surface_emit_operator_for_style (css, surface, op);
+	cairo_svg_style *style = _cairo_svg_surface_end_style(surface->document, css);
+	if (style != NULL)
+		_cairo_output_stream_printf (output, " class=\"s%d\"", style->id);
+	_cairo_svg_surface_emit_transform (output, " transform", &p2u, NULL);
+	_cairo_output_stream_printf (output, ">");
+
+	double x = 0, y = 0;
+	//for (x = 0; x < 800; x += extents.width) {
+		//for (y = 0; y < 800; y += extents.height) {
+			_cairo_output_stream_printf (output,
+						 "<use xlink:href=\"#image%d\" x=\"%f\" y=\"%f\"",
+						 sp->surface->unique_id, x, y);
+			_cairo_output_stream_printf (output, "/>\n");
+		//}
+	//}
+	_cairo_output_stream_printf (output, "</g>");
+	if (clip_id != -1 || extra_attributes)
+		_cairo_output_stream_printf (output, "</g>");
+}
+
 static cairo_int_status_t
 _cairo_svg_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
@@ -2724,59 +2777,32 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    cairo_bool_t drawpath = TRUE;
-    cairo_surface_pattern_t* sp;
-    double x1, y1, x2, y2;
-    if (op == CAIRO_OPERATOR_OVER
-    		&& source != NULL && source->type == CAIRO_PATTERN_TYPE_SURFACE
-    		&& fill_rule == CAIRO_FILL_RULE_WINDING
-    		&& path->is_rectilinear
-    		&& path->buf.base.num_points == 5
-    		&& path->buf.base.points[0].y == path->buf.base.points[1].y
-    		&& path->buf.base.points[0].y == path->buf.base.points[4].y
-    		&& path->buf.base.points[2].y == path->buf.base.points[3].y
-    		&& path->buf.base.points[1].x == path->buf.base.points[2].x
-    		&& path->buf.base.points[0].x == path->buf.base.points[4].x
-    		&& path->buf.base.points[0].x == path->buf.base.points[3].x) {
-		cairo_surface_pattern_t* sp = (cairo_surface_pattern_t*)source;
-		cairo_rectangle_int_t extents;
-    	_cairo_surface_get_extents (sp->surface, &extents);
-		double x, y;
-	    cairo_matrix_t p2u = sp->base.matrix;
-	    status = cairo_matrix_invert (&p2u);
-		x = 0;
-		y = 0;
-		cairo_matrix_transform_point(&p2u, &x, &y);
-		x1 = _cairo_fixed_to_double(path->buf.base.points[3].x);
-		y1 = _cairo_fixed_to_double(path->buf.base.points[3].y);
-		if (_round(x, 1) == _round(x1, 1)
-				&& _round(y, 1) == _round(y1, 1)) {
-			x = extents.width;
-			y = extents.height;
-			cairo_matrix_transform_point(&p2u, &x, &y);
-			x2 = _cairo_fixed_to_double(path->buf.base.points[1].x);
-			y2 = _cairo_fixed_to_double(path->buf.base.points[1].y);
-			if (_round(x, 1) == _round(x2, 1)
-					&& _round(y, 1) == _round(y2, 1)) {
-				_cairo_svg_surface_emit_surface(surface, sp->surface, surface->xml_node,
-						x1, y1, x2 - x1, y2 - y1);
-				drawpath = FALSE;
-			}
-		}
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE
+    		&& !_cairo_surface_is_recording (((cairo_surface_pattern_t*)source)->surface)) {
+    	int clip_id;
+    	_cairo_output_stream_printf (surface->xml_node, "<clipPath id=\"clip%d\"><path ",
+    			clip_id = surface->document->clip_id++);
+    	_cairo_svg_surface_emit_path (surface->xml_node, path, NULL, PATH_PRECISION);
+    	_cairo_output_stream_printf (surface->xml_node, "/></clipPath>\n");
+
+    	_cairo_svg_surface_draw_pattern(surface, surface->xml_node,
+    			(cairo_surface_pattern_t*)source, op, clip_id,
+    			NULL, NULL);
+
+    	return CAIRO_STATUS_SUCCESS;
     }
-    if (drawpath) {
-        if ((surface->document->styles & STYLE_B) == 0) {
-        	_cairo_output_stream_printf(surface->document->css, ".sb {stroke:none;}\n");
-        	surface->document->styles |= STYLE_B;
-        }
-        _cairo_output_stream_printf (surface->xml_node, "<path class=\"sb ");
-        status = _cairo_svg_surface_emit_fill_style (surface->xml_node, surface, op, source, fill_rule, NULL);
-        if (unlikely (status))
-    	return status;
-		_cairo_output_stream_printf (surface->xml_node, "\" ");
-		_cairo_svg_surface_emit_path (surface->xml_node, path, NULL, PATH_PRECISION);
-		_cairo_output_stream_printf (surface->xml_node, "/>\n");
-    }
+
+    if ((surface->document->styles & STYLE_B) == 0) {
+		_cairo_output_stream_printf(surface->document->css, ".sb {stroke:none;}\n");
+		surface->document->styles |= STYLE_B;
+	}
+	_cairo_output_stream_printf (surface->xml_node, "<path class=\"sb ");
+	status = _cairo_svg_surface_emit_fill_style (surface->xml_node, surface, op, source, fill_rule, NULL);
+	if (unlikely (status))
+	return status;
+	_cairo_output_stream_printf (surface->xml_node, "\" ");
+	_cairo_svg_surface_emit_path (surface->xml_node, path, NULL, PATH_PRECISION);
+	_cairo_output_stream_printf (surface->xml_node, "/>\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2801,7 +2827,7 @@ _cairo_svg_surface_get_extents (void		        *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_svg_surface_pattern_class(cairo_svg_surface_t *surface,
+_cairo_svg_surface_pattern_class (cairo_svg_surface_t *surface,
 			cairo_output_stream_t *output,
 			cairo_operator_t	      op,
 	       const cairo_pattern_t	     *source)
@@ -2815,7 +2841,8 @@ _cairo_svg_surface_pattern_class(cairo_svg_surface_t *surface,
 	return status;
 
 	cairo_svg_style *style = _cairo_svg_surface_end_style(surface->document, css);
-	_cairo_output_stream_printf (output, "s%d", style->id);
+	if (style != NULL)
+		_cairo_output_stream_printf (output, "s%d", style->id);
 	return CAIRO_STATUS_SUCCESS;
 }
 
@@ -2832,13 +2859,31 @@ _cairo_svg_surface_emit_paint (cairo_output_stream_t *output,
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
 	source->extend == CAIRO_EXTEND_NONE)
-	return _cairo_svg_surface_emit_composite_pattern (output,
-							  surface,
-							  op,
-							  (cairo_surface_pattern_t *) source,
-							  invalid_pattern_id,
-							  parent_matrix,
-							  extra_attributes);
+		return _cairo_svg_surface_emit_composite_pattern (output,
+								  surface,
+								  op,
+								  (cairo_surface_pattern_t *) source,
+								  invalid_pattern_id,
+								  parent_matrix,
+								  extra_attributes);
+
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE
+    		&& !_cairo_surface_is_recording (((cairo_surface_pattern_t*)source)->surface)) {
+    	int clip_id;
+    	_cairo_output_stream_printf (output, "<clipPath id=\"clip%d\">",
+    			clip_id = surface->document->clip_id++);
+    	_cairo_output_stream_printf (output,
+    				 "<rect x=\"0\" y=\"0\" "
+    				 "width=\"%f\" height=\"%f\"/>",
+    				 _round(surface->width, PATH_PRECISION), _round(surface->height, PATH_PRECISION));
+    	_cairo_output_stream_printf (output, "</clipPath>\n");
+
+		_cairo_svg_surface_draw_pattern(surface, output,
+				(cairo_surface_pattern_t*)source, op, clip_id, NULL, extra_attributes);
+
+		surface->document->clip_id++;
+	    return CAIRO_STATUS_SUCCESS;
+    }
 
     if ((surface->document->styles & STYLE_B) == 0) {
     	_cairo_output_stream_printf(surface->document->css, ".sb {stroke:none;}\n");
@@ -2849,7 +2894,7 @@ _cairo_svg_surface_emit_paint (cairo_output_stream_t *output,
 				 "width=\"%f\" height=\"%f\" "
 				 "class=\"",
 				 _round(surface->width, PATH_PRECISION), _round(surface->height, PATH_PRECISION));
-	status = _cairo_svg_surface_pattern_class(surface, output, op, source);
+	status = _cairo_svg_surface_pattern_class (surface, output, op, source);
 	if (unlikely (status))
 	return status;
 	_cairo_output_stream_printf (output, " sb\"");
@@ -3112,7 +3157,7 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 	goto FALLBACK;
 
    _cairo_output_stream_printf (surface->xml_node, "<g class=\"");
-	status = _cairo_svg_surface_pattern_class(surface, surface->xml_node, op, pattern);
+	status = _cairo_svg_surface_pattern_class (surface, surface->xml_node, op, pattern);
 	if (unlikely (status))
 	return status;
 	   _cairo_output_stream_printf (surface->xml_node, "\">\n");
@@ -3205,6 +3250,10 @@ static cairo_bool_t
 _cairo_svg_surface_equal_style(const void *key_a, const void *key_b) {
 	cairo_svg_style *op_a = (cairo_svg_style*)key_a;
 	cairo_svg_style *op_b = (cairo_svg_style*)key_b;
+	if (op_a == NULL && op_b == NULL)
+		return TRUE;
+	if (op_a == NULL || op_b == NULL)
+		return FALSE;
 	return op_a->length == op_b->length &&
 			memcmp(op_a->style, op_b->style, op_a->length) == 0;
 }
@@ -3276,7 +3325,9 @@ _cairo_svg_surface_show_text_glyphs (void			*abstract_surface,
     if (newtext) {
     	_cairo_svg_end_text(surface);
 		_cairo_output_stream_printf (output,
-					 "<text class=\"s%d\"", style->id);
+					 "<text");
+		if (style != NULL)
+			_cairo_output_stream_printf (output, " class=\"s%d\"", style->id);
 		surface->document->text_x = _cairo_memory_stream_create ();
 		surface->document->text_y = _cairo_memory_stream_create ();
 		surface->document->text = _cairo_memory_stream_create ();

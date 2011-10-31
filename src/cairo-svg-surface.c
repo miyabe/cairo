@@ -150,9 +150,6 @@ static void _escape_html(const char *utf8, int *off, cairo_output_stream_t *out)
 	case '"':
 		_cairo_output_stream_printf (out, "&quot;");
 		break;
-	case '\'':
-		_cairo_output_stream_printf (out, "&apos;");
-		break;
 	default: {
    	if ((unsigned char)utf8[*off] < 32 && utf8[*off] != 0x20 && utf8[*off] != 0x0D && utf8[*off] != 0x0A && utf8[*off] != 0x09) {
    		_cairo_output_stream_printf (out, "&#x%X;", 0xE000 + (unsigned char)utf8[*off]);
@@ -1184,7 +1181,8 @@ _cairo_svg_document_emit_font_subset_element (cairo_scaled_font_subset_t	*font_s
 						 "<font-face");
 		_cairo_svg_surface_emit_font_face(fontout->xml_node_glyphs, font_subset);
 		_cairo_output_stream_printf (fontout->xml_node_glyphs,
-						 "/>\n");
+						 ">\n<font-face-src><font-face-name name=\"font%d\"/></font-face-src>\n</font-face>\n",
+						 font_subset->font_id);
     }
 
 	_cairo_scaled_font_freeze_cache (font_subset->scaled_font);

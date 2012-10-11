@@ -37,6 +37,7 @@
 #include <limits.h> /* INT_MAX */
 #include <math.h> /* pow */
 #include <stdio.h> /* EOF */
+#include <stdint.h> /* for {INT,UINT}*_{MIN,MAX} */
 #include <string.h> /* memset */
 #include <assert.h>
 #include <zlib.h>
@@ -767,7 +768,7 @@ base64_end (csi_t *ctx, csi_scanner_t *scan)
 	longjmp (scan->jmpbuf, status);
 }
 
-static inline void
+static void
 scan_read (csi_scanner_t *scan, csi_file_t *src, void *ptr, int len)
 {
     uint8_t *data = ptr;

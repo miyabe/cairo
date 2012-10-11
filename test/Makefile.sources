@@ -1,30 +1,55 @@
 test_sources = \
 	a1-bug.c					\
+	a1-clip.c					\
+	a1-fill.c					\
 	a1-image-sample.c 				\
 	a1-mask.c					\
 	a1-mask-sample.c 				\
+	a1-sample.c	 				\
 	a1-traps-sample.c				\
 	a1-rasterisation.c				\
+	a8-clear.c					\
 	a8-mask.c					\
 	aliasing.c					\
 	alpha-similar.c					\
+	arc-direction.c					\
+	arc-infinite-loop.c				\
+	arc-looping-dash.c				\
 	api-special-cases.c				\
 	big-line.c					\
+	big-empty-box.c					\
+	big-empty-triangle.c				\
+	big-little-box.c				\
+	big-little-triangle.c				\
+	bug-spline.c					\
 	big-trap.c					\
 	bilevel-image.c					\
+	bug-40410.c					\
+	bug-51910.c					\
 	bug-bo-rectangular.c				\
+	bug-bo-collins.c				\
+	bug-bo-ricotz.c					\
+	bug-source-cu.c					\
+	bug-extents.c					\
 	bug-seams.c					\
 	caps.c						\
+	checkerboard.c					\
 	caps-joins.c					\
 	caps-joins-alpha.c				\
 	caps-joins-curve.c				\
+	caps-tails-curve.c				\
 	caps-sub-paths.c				\
 	clear.c						\
 	clear-source.c					\
 	clip-all.c					\
 	clip-contexts.c					\
+	clip-complex-shape.c				\
 	clip-disjoint.c					\
+	clip-disjoint-hatching.c			\
+	clip-disjoint-quad.c				\
 	clip-device-offset.c				\
+	clip-double-free.c				\
+	clip-draw-unbounded.c				\
 	clip-empty.c					\
 	clip-empty-group.c				\
 	clip-empty-save.c				\
@@ -32,16 +57,18 @@ test_sources = \
 	clip-fill-no-op.c				\
 	clip-fill-rule.c				\
 	clip-fill-rule-pixel-aligned.c			\
-	clip-fill-unbounded.c				\
 	clip-group-shapes.c				\
 	clip-image.c					\
+	clip-intersect.c				\
+	clip-mixed-antialias.c				\
 	clip-nesting.c					\
 	clip-operator.c					\
 	clip-push-group.c				\
+	clip-polygons.c					\
+	clip-rectilinear.c				\
 	clip-shape.c					\
 	clip-stroke.c					\
 	clip-stroke-no-op.c				\
-	clip-stroke-unbounded.c				\
 	clip-text.c					\
 	clip-twice.c					\
 	clip-twice-rectangle.c				\
@@ -54,6 +81,7 @@ test_sources = \
 	composite-integer-translate-source.c		\
 	composite-integer-translate-over.c		\
 	composite-integer-translate-over-repeat.c	\
+	copy-disjoint.c					\
 	copy-path.c					\
 	coverage.c					\
 	create-for-stream.c				\
@@ -79,6 +107,8 @@ test_sources = \
 	degenerate-pen.c				\
 	degenerate-radial-gradient.c			\
 	degenerate-rel-curve-to.c			\
+	degenerate-solid-dash.c				\
+	drunkard-tails.c				\
 	device-offset.c					\
 	device-offset-fractional.c			\
 	device-offset-positive.c			\
@@ -92,13 +122,14 @@ test_sources = \
 	extend-repeat.c					\
 	extend-repeat-similar.c				\
 	extended-blend.c				\
-	extended-blend-alpha.c				\
+	fallback.c					\
 	fill-alpha.c					\
 	fill-alpha-pattern.c				\
 	fill-and-stroke.c				\
 	fill-and-stroke-alpha.c				\
 	fill-and-stroke-alpha-add.c			\
 	fill-degenerate-sort-order.c			\
+	fill-disjoint.c					\
 	fill-empty.c					\
 	fill-image.c				        \
 	fill-missed-stop.c				\
@@ -121,19 +152,27 @@ test_sources = \
 	gradient-zero-stops-mask.c			\
 	group-clip.c					\
 	group-paint.c					\
+	group-state.c					\
 	group-unaligned.c				\
 	half-coverage.c					\
 	halo.c						\
+	hatchings.c					\
+	horizontal-clip.c				\
 	huge-linear.c					\
 	huge-radial.c					\
 	image-surface-source.c				\
+	image-bug-710072.c				\
 	implicit-close.c				\
 	infinite-join.c					\
 	in-fill-empty-trapezoid.c			\
 	in-fill-trapezoid.c				\
 	invalid-matrix.c				\
 	inverse-text.c					\
+	inverted-clip.c					\
 	joins.c						\
+	joins-loop.c					\
+	joins-star.c					\
+	joins-retrace.c					\
 	large-clip.c					\
 	large-font.c					\
 	large-source.c					\
@@ -144,10 +183,14 @@ test_sources = \
 	leaky-dashed-stroke.c				\
 	leaky-polygon.c					\
 	line-width.c					\
+	line-width-large-overlap.c			\
+	line-width-overlap.c				\
 	line-width-scale.c				\
+	line-width-tolerance.c				\
 	line-width-zero.c				\
 	linear-gradient.c				\
 	linear-gradient-extend.c			\
+	linear-gradient-large.c				\
 	linear-gradient-one-stop.c			\
 	linear-gradient-reflect.c			\
 	linear-gradient-subset.c			\
@@ -155,6 +198,7 @@ test_sources = \
 	linear-uniform.c				\
 	long-dashed-lines.c				\
 	long-lines.c					\
+	map-to-image.c					\
 	mask.c						\
 	mask-alpha.c					\
 	mask-ctm.c					\
@@ -162,10 +206,18 @@ test_sources = \
 	mask-surface-ctm.c				\
 	mask-transformed-image.c			\
 	mask-transformed-similar.c			\
-	recording-surface-pattern.c			\
+	mesh-pattern.c				        \
+	mesh-pattern-accuracy.c				\
+	mesh-pattern-conical.c				\
+	mesh-pattern-control-points.c			\
+	mesh-pattern-fold.c		        	\
+	mesh-pattern-overlap.c		        	\
+	mesh-pattern-transformed.c		        \
 	mime-data.c					\
+	mime-surface-api.c				\
 	miter-precision.c				\
 	move-to-show-surface.c				\
+	negative-stride-image.c				\
 	new-sub-path.c					\
 	nil-surface.c					\
 	operator.c					\
@@ -173,22 +225,28 @@ test_sources = \
 	operator-alpha-alpha.c				\
 	operator-clear.c				\
 	operator-source.c				\
+	outline-tolerance.c				\
 	over-above-source.c				\
 	over-around-source.c				\
 	over-below-source.c				\
 	over-between-source.c				\
+	overlapping-boxes.c				\
 	overlapping-glyphs.c				\
+	overlapping-dash-caps.c				\
 	paint.c						\
+	paint-clip-fill.c				\
 	paint-repeat.c					\
 	paint-source-alpha.c				\
 	paint-with-alpha.c				\
 	partial-clip-text.c				\
 	partial-coverage.c				\
+	pass-through.c					\
 	path-append.c					\
 	path-stroke-twice.c				\
 	path-precision.c				\
 	pattern-get-type.c				\
 	pattern-getters.c				\
+	pdf-isolated-group.c				\
 	pixman-rotate.c					\
 	png.c						\
 	push-group.c					\
@@ -196,18 +254,27 @@ test_sources = \
 	push-group-path-offset.c			\
 	radial-gradient.c				\
 	radial-gradient-extend.c			\
-	radial-gradient-mask.c				\
-	radial-gradient-mask-source.c			\
-	radial-gradient-one-stop.c			\
-	radial-gradient-source.c			\
+	radial-outer-focus.c				\
+	random-clips.c			\
 	random-intersections-eo.c			\
 	random-intersections-nonzero.c			\
 	random-intersections-curves-eo.c		\
 	random-intersections-curves-nz.c		\
+	raster-source.c					\
+	record.c					\
+	record1414x.c					\
+	record2x.c					\
+	record90.c					\
+	record-extend.c					\
+	record-mesh.c					\
+	recording-surface-pattern.c			\
+	recording-surface-extend.c			\
 	rectangle-rounding-error.c			\
 	rectilinear-fill.c				\
+	rectilinear-grid.c				\
 	rectilinear-miter-limit.c			\
 	rectilinear-dash.c				\
+	rectilinear-dash-scale.c			\
 	rectilinear-stroke.c				\
 	reflected-stroke.c				\
 	rel-path.c					\
@@ -216,6 +283,7 @@ test_sources = \
 	rotated-clip.c					\
 	rounded-rectangle-fill.c			\
 	rounded-rectangle-stroke.c			\
+	sample.c					\
 	scale-down-source-surface-paint.c		\
 	scale-offset-image.c				\
 	scale-offset-similar.c				\
@@ -223,14 +291,18 @@ test_sources = \
 	scaled-font-zero-matrix.c			\
 	stroke-ctm-caps.c				\
 	stroke-image.c				        \
+	stroke-open-box.c				\
 	select-font-face.c				\
 	select-font-no-show-text.c			\
 	self-copy.c					\
 	self-copy-overlap.c				\
 	self-intersecting.c				\
 	set-source.c					\
+	show-glyphs-advance.c				\
 	show-glyphs-many.c				\
 	show-text-current-point.c			\
+	shape-general-convex.c				\
+	shape-sierpinski.c				\
 	skew-extreme.c					\
 	smask.c						\
 	smask-fill.c					\
@@ -244,6 +316,8 @@ test_sources = \
 	source-clip-scale.c				\
 	source-surface-scale-paint.c			\
 	spline-decomposition.c				\
+	stride-12-image.c				\
+	stroke-pattern.c                                \
 	subsurface.c                                    \
 	subsurface-image-repeat.c                       \
 	subsurface-repeat.c                             \
@@ -251,6 +325,8 @@ test_sources = \
 	subsurface-pad.c                                \
 	subsurface-modify-child.c                       \
 	subsurface-modify-parent.c                      \
+	subsurface-outside-target.c                     \
+	subsurface-scale.c                              \
 	subsurface-similar-repeat.c                     \
 	surface-finish-twice.c				\
 	surface-pattern.c				\
@@ -259,8 +335,7 @@ test_sources = \
 	surface-pattern-scale-down.c			\
 	surface-pattern-scale-down-extend.c		\
 	surface-pattern-scale-up.c			\
-	text-antialias-gray.c				\
-	text-antialias-none.c				\
+	text-antialias.c				\
 	text-antialias-subpixel.c			\
 	text-cache-crash.c				\
 	text-glyph-range.c				\
@@ -268,6 +343,8 @@ test_sources = \
 	text-rotate.c					\
 	text-transform.c				\
 	text-zero-len.c					\
+	tighten-bounds.c				\
+	tiger.c						\
 	toy-font-face.c					\
 	transforms.c					\
 	translate-show-surface.c			\
@@ -277,13 +354,20 @@ test_sources = \
 	twin-antialias-mixed.c				\
 	twin-antialias-none.c				\
 	twin-antialias-subpixel.c			\
+	unaligned-box.c					\
 	unantialiased-shapes.c				\
 	unbounded-operator.c				\
+	unclosed-strokes.c				\
 	user-data.c					\
 	user-font.c					\
 	user-font-mask.c				\
 	user-font-proxy.c				\
 	user-font-rescale.c				\
+	world-map.c					\
+	white-in-noop.c					\
+	xcb-huge-image-shm.c				\
+	xcb-stress-cache.c				\
+	xcb-snapshot-assert.c				\
 	xcomposite-projection.c				\
 	xlib-expose-event.c 				\
 	zero-alpha.c					\
@@ -324,9 +408,6 @@ svg_surface_test_sources = \
 	svg-clip.c \
 	svg-surface-source.c
 
-test_fallback16_surface_test_sources = \
-	test-fallback16-surface-source.c
-
 xcb_surface_test_sources = \
 	xcb-surface-source.c
 
@@ -343,7 +424,9 @@ fallback_resolution_test_sources = fallback-resolution.c
 cairo_test_suite_headers = \
 	buffer-diff.h \
 	cairo-test.h \
-	cairo-test-private.h
+	cairo-test-private.h \
+	world-map.h \
+	$(NULL)
 
 cairo_test_suite_sources = \
 	buffer-diff.c \

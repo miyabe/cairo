@@ -24,6 +24,7 @@
 
 #include "cairo-types-private.h"
 #include "cairo-compiler-private.h"
+#include "cairo-freelist-type-private.h"
 
 /* for stand-alone compilation*/
 #ifndef VG
@@ -33,33 +34,6 @@
 #ifndef NULL
 #define NULL (void *) 0
 #endif
-
-typedef struct _cairo_freelist_node cairo_freelist_node_t;
-struct _cairo_freelist_node {
-    cairo_freelist_node_t *next;
-};
-
-typedef struct _cairo_freelist {
-    cairo_freelist_node_t *first_free_node;
-    unsigned nodesize;
-} cairo_freelist_t;
-
-typedef struct _cairo_freelist_pool cairo_freelist_pool_t;
-struct _cairo_freelist_pool {
-    cairo_freelist_pool_t *next;
-    unsigned size, rem;
-    uint8_t *data;
-};
-
-typedef struct _cairo_freepool {
-    cairo_freelist_node_t *first_free_node;
-    cairo_freelist_pool_t *pools;
-    cairo_freelist_pool_t *freepools;
-    unsigned nodesize;
-    cairo_freelist_pool_t embedded_pool;
-    uint8_t embedded_data[1000];
-} cairo_freepool_t;
-
 
 /* Initialise a freelist that will be responsible for allocating
  * nodes of size nodesize. */
@@ -137,7 +111,7 @@ _cairo_freepool_alloc (cairo_freepool_t *freepool)
     cairo_freelist_node_t *node;
 
     node = freepool->first_free_node;
-    if (unlikely (node == NULL))
+    if (node == NULL)
 	return _cairo_freepool_alloc_from_pool (freepool);
 
     VG (VALGRIND_MAKE_MEM_DEFINED (node, sizeof (node->next)));

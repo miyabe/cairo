@@ -39,6 +39,7 @@
 #include "cairo-skia.h"
 
 #include "cairo-surface-clipper-private.h"
+#include "cairo-image-surface-inline.h"
 
 #include <SkBitmap.h>
 #include <SkCanvas.h>
@@ -356,10 +357,10 @@ pattern_to_sk_shader (cairo_skia_surface_t *dst, const cairo_pattern_t *pattern,
 	    cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
 	    SkPoint points[2];
 
-	    points[0].set (CAIRO_FIXED_TO_SK_SCALAR (linear->p1.x),
-			   CAIRO_FIXED_TO_SK_SCALAR (linear->p1.y));
-	    points[1].set (CAIRO_FIXED_TO_SK_SCALAR (linear->p2.x),
-			   CAIRO_FIXED_TO_SK_SCALAR (linear->p2.y));
+	    points[0].set (SkFloatToScalar (linear->pd1.x),
+			   SkFloatToScalar (linear->pd1.y));
+	    points[1].set (SkFloatToScalar (linear->pd2.x),
+			   SkFloatToScalar (linear->pd2.y));
 	    shader = SkGradientShader::CreateLinear (points, colors, pos, gradient->n_stops,
 						     extend_to_sk (pattern->extend));
 	} else {
@@ -500,7 +501,6 @@ path_to_sk (cairo_path_fixed_t *path,
     data.matrix = mat;
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  cpc_move_to,
 					  cpc_line_to,
 					  cpc_curve_to,
@@ -1152,7 +1152,7 @@ cairo_skia_surface_get_image (cairo_surface_t *surface)
     return &_get_image_surface (esurf)->base;
 }
 
-/***
+/*
 
 Todo:
 
@@ -1172,4 +1172,4 @@ Medium:
 Low:
 - implement EXTEND_NONE
 
-***/
+*/

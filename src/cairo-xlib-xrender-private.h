@@ -96,31 +96,16 @@ __attribute__((__unused__)) static void   _void_consume_free   (Display *p, XID 
 #define PictOpBlendMaximum			    0x3e
 #endif
 
-/* There doesn't appear to be a simple #define that we can conditionalize
- * on.  Instead, use the version; gradients were introdiced in 0.10. */
-#if RENDER_MAJOR == 0 && RENDER_MINOR < 10
+#if !HAVE_XRENDERCREATELINEARGRADIENT
 #define XRenderCreateLinearGradient			_int_consume
+#endif
+
+#if !HAVE_XRENDERCREATERADIALGRADIENT
 #define XRenderCreateRadialGradient			_int_consume
+#endif
+
+#if !HAVE_XRENDERCREATECONICALGRADIENT
 #define XRenderCreateConicalGradient			_int_consume
-typedef struct _XCircle {
-    XFixed x;
-    XFixed y;
-    XFixed radius;
-} XCircle;
-typedef struct _XLinearGradient {
-    XPointFixed p1;
-    XPointFixed p2;
-} XLinearGradient;
-
-typedef struct _XRadialGradient {
-    XCircle inner;
-    XCircle outer;
-} XRadialGradient;
-
-typedef struct _XConicalGradient {
-    XPointFixed center;
-    XFixed angle; /* in degrees */
-} XConicalGradient;
 #endif
 
 
@@ -457,12 +442,6 @@ typedef struct _XTriangle {
     XPointFixed	p1, p2, p3;
 } XTriangle;
 
-typedef struct _XCircle {
-    XFixed x;
-    XFixed y;
-    XFixed radius;
-} XCircle;
-
 typedef struct _XTrapezoid {
     XFixed  top, bottom;
     XLineFixed	left, right;
@@ -496,21 +475,6 @@ typedef struct _XSpanFix {
 typedef struct _XTrap {
     XSpanFix	    top, bottom;
 } XTrap;
-
-typedef struct _XLinearGradient {
-    XPointFixed p1;
-    XPointFixed p2;
-} XLinearGradient;
-
-typedef struct _XRadialGradient {
-    XCircle inner;
-    XCircle outer;
-} XRadialGradient;
-
-typedef struct _XConicalGradient {
-    XPointFixed center;
-    XFixed angle; /* in degrees */
-} XConicalGradient;
 
 #define PictStandardARGB32  0
 #define PictStandardRGB24   1

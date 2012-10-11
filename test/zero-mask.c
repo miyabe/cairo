@@ -92,7 +92,7 @@ mask_with_alpha_surface (cairo_t *cr)
     cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REFLECT);
 
     cairo_mask (cr, pattern);
-    
+
     cairo_pattern_destroy (pattern);
     cairo_surface_destroy (surface);
 }
@@ -106,7 +106,7 @@ mask_with_nonclear_surface (cairo_t *cr)
                                                                     16, 8, 4);
 
     cairo_mask_surface (cr, surface, 0, 0);
-    
+
     cairo_surface_destroy (surface);
 }
 
@@ -134,8 +134,6 @@ mask_with_extend_none (cairo_t *cr)
     
     cairo_surface_destroy (surface);
 }
-
-#define ARRAY_LENGTH(array) (sizeof (array) / sizeof ((array)[0]))
 
 typedef void (* mask_func_t) (cairo_t *);
 
@@ -177,7 +175,7 @@ draw (cairo_t *cr, int width, int height)
 
     for (op = 0; op < ARRAY_LENGTH (operators); op++) {
         cairo_set_operator (cr, operators[op]);
-        
+
         for (i = 0; i < ARRAY_LENGTH (mask_funcs); i++) {
             cairo_save (cr);
             cairo_translate (cr, i * (RECT + SPACE), op * (RECT + SPACE));

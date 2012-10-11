@@ -116,7 +116,7 @@ _cairo_boilerplate_directfb_window_create_surface (DFBInfo	   *info,
     desc.width	= width;
     desc.height = height;
     if (content == CAIRO_CONTENT_COLOR_ALPHA) {
-	desc.flags |= DWDESC_CAPS | DSDESC_PIXELFORMAT;
+	desc.flags |= DWDESC_CAPS | DWDESC_PIXELFORMAT;
 	desc.caps  |= DWCAPS_DOUBLEBUFFER | DWCAPS_ALPHACHANNEL;
 	desc.pixelformat = DSPF_ARGB;
     }
@@ -175,7 +175,6 @@ _cairo_boilerplate_directfb_create_surface (const char		      *name,
 					    double		       max_width,
 					    double		       max_height,
 					    cairo_boilerplate_mode_t   mode,
-					    int 		       id,
 					    void		     **closure)
 {
 
@@ -213,6 +212,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR, 0,
 	"cairo_directfb_surface_create",
 	_cairo_boilerplate_directfb_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -224,6 +224,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA, 0,
 	"cairo_directfb_surface_create",
 	_cairo_boilerplate_directfb_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,

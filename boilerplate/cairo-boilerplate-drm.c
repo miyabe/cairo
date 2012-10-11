@@ -42,7 +42,6 @@ _cairo_boilerplate_drm_create_surface (const char		 *name,
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure)
 {
     cairo_device_t *device;
@@ -80,6 +79,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_DRM, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_drm_surface_create",
 	_cairo_boilerplate_drm_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -93,6 +93,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_DRM, CAIRO_CONTENT_COLOR, 1,
 	"cairo_drm_surface_create",
 	_cairo_boilerplate_drm_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,

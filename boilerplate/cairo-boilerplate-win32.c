@@ -36,7 +36,6 @@ _cairo_boilerplate_win32_create_surface (const char		   *name,
 					 double 		    max_width,
 					 double 		    max_height,
 					 cairo_boilerplate_mode_t   mode,
-					 int			    id,
 					 void			  **closure)
 {
     cairo_format_t format;
@@ -54,6 +53,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
 	"cairo_win32_surface_create_with_dib",
 	_cairo_boilerplate_win32_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -67,6 +67,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR_ALPHA, 0,
 	"cairo_win32_surface_create_with_dib",
 	_cairo_boilerplate_win32_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,

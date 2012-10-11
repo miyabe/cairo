@@ -6,8 +6,6 @@ include $(srcdir)/Makefile.am.features
 EXTRA_DIST += Makefile.win32      Makefile.win32.features
 #MAINTAINERCLEANFILES += $(srcdir)/Makefile.win32.features
 
-EXTRA_DIST += glew/LICENSE.txt
-
 AM_CPPFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
 AM_LDFLAGS = $(CAIRO_LDFLAGS)
 
@@ -69,9 +67,9 @@ cairo.def: cairo-features.h $(enabled_cairo_headers)
 	@echo Generating $@
 	@(echo EXPORTS; \
 	(cd $(srcdir); cat $(enabled_cairo_headers) || echo 'cairo_ERROR ()' ) | \
-	grep -v -E '^# *include' | \
+	$(EGREP) -v '^# *include' | \
 	( cat cairo-features.h - | $(CPP) -D__cplusplus - || echo 'cairo_ERROR ()' ) | \
-	grep -E '^cairo_.* \(' | \
+	$(EGREP) '^cairo_.* \(' | \
 	sed -e 's/[ 	].*//' | \
 	sort; \
 	echo LIBRARY libcairo-$(CAIRO_VERSION_SONUM).dll; \
@@ -91,7 +89,7 @@ TESTS_ENVIRONMENT = \
 	$(NULL)
 TESTS_SH = \
 	check-def.sh \
-	check-doc-syntax.sh\
+	check-doc-syntax.sh \
 	check-headers.sh \
 	check-plt.sh \
 	check-preprocessor-syntax.sh \
@@ -102,7 +100,7 @@ else
 TESTS += check-link$(EXEEXT)
 endif
 
-EXTRA_DIST += $(TESTS_SH) check-has-hidden-symbols.c
+EXTRA_DIST += $(TESTS_SH) check-has-hidden-symbols.c check-doc-syntax.awk
 check_PROGRAMS += check-link
 check_link_LDADD = libcairo.la
 

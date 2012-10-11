@@ -78,7 +78,6 @@ _cairo_boilerplate_vg_create_surface_glx (const char		    *name,
 					  double		     max_width,
 					  double		     max_height,
 					  cairo_boilerplate_mode_t   mode,
-					  int			     id,
 					  void			   **closure)
 {
     int rgba_attribs[] = {
@@ -207,7 +206,6 @@ _cairo_boilerplate_vg_create_surface_egl (const char		    *name,
 					  double		     max_width,
 					  double		     max_height,
 					  cairo_boilerplate_mode_t   mode,
-					  int			     id,
 					  void			   **closure)
 {
     int rgba_attribs[] = {
@@ -307,6 +305,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_VG, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_vg_context_create_for_glx",
 	_cairo_boilerplate_vg_create_surface_glx,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -320,6 +319,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_VG, CAIRO_CONTENT_COLOR, 1,
 	"cairo_vg_context_create_for_glx",
 	_cairo_boilerplate_vg_create_surface_glx,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -335,6 +335,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_VG, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_vg_context_create_for_egl",
 	_cairo_boilerplate_vg_create_surface_egl,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -348,6 +349,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_VG, CAIRO_CONTENT_COLOR, 1,
 	"cairo_vg_context_create_for_egl",
 	_cairo_boilerplate_vg_create_surface_egl,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,

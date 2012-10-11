@@ -25,6 +25,7 @@
  * Authors: Carl Worth <cworth@cworth.org>
  */
 
+#include "cairo-missing.h"
 #include "cairo-perf.h"
 #include "cairo-stats.h"
 
@@ -41,23 +42,6 @@
 #include <assert.h>
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>
-#endif
-
-/* 'ssize_t' does not exist in the C standard on win32.
- * We use 'ptrdiff_t', which is nearly equivalent. */
-#ifdef _MSC_VER
-typedef ptrdiff_t ssize_t;
-#endif
-
-#if !defined (__USE_GNU) && !defined(__USE_XOPEN2K8)
-static ssize_t
-getline (char	**lineptr,
-	 size_t  *n,
-	 FILE	 *stream);
-
-static char *
-strndup (const char *s,
-	 size_t      n);
 #endif
 
 #ifdef _MSC_VER
@@ -126,6 +110,7 @@ do {									\
 
 static test_report_status_t
 test_report_parse (test_report_t *report,
+		   int fileno,
 		   char 	 *line,
 		   char 	 *configuration)
 {
@@ -153,6 +138,7 @@ test_report_parse (test_report_t *report,
 
     skip_space ();
 
+    report->fileno = fileno;
     report->configuration = configuration;
     parse_string (report->backend);
     end = strrchr (report->backend, '.');
@@ -179,13 +165,13 @@ test_report_parse (test_report_t *report,
 	skip_space ();
 
 	report->samples_size = 5;
-	report->samples = xmalloc (report->samples_size * sizeof (cairo_perf_ticks_t));
+	report->samples = xmalloc (report->samples_size * sizeof (cairo_time_t));
 	report->stats.min_ticks = 0;
 	do {
 	    if (report->samples_count == report->samples_size) {
 		report->samples_size *= 2;
 		report->samples = xrealloc (report->samples,
-					    report->samples_size * sizeof (cairo_perf_ticks_t));
+					    report->samples_size * sizeof (cairo_time_t));
 	    }
 	    parse_long_long (report->samples[report->samples_count]);
 	    if (report->samples_count == 0) {
@@ -229,61 +215,6 @@ test_report_parse (test_report_t *report,
 
     return TEST_REPORT_STATUS_SUCCESS;
 }
-
-/* We conditionally provide a custom implementation of getline and strndup
- * as needed. These aren't necessary full-fledged general purpose
- * implementations. They just get the job done for our purposes.
- */
-#if !defined (__USE_GNU) && !defined(__USE_XOPEN2K8)
-#define POORMANS_GETLINE_BUFFER_SIZE (65536)
-static ssize_t
-getline (char	**lineptr,
-	 size_t  *n,
-	 FILE	 *stream)
-{
-    if (!*lineptr)
-    {
-	*n = POORMANS_GETLINE_BUFFER_SIZE;
-	*lineptr = (char *) malloc (*n);
-    }
-
-    if (!fgets (*lineptr, *n, stream))
-	return -1;
-
-    if (!feof (stream) && !strchr (*lineptr, '\n'))
-    {
-	fprintf (stderr, "The poor man's implementation of getline in "
-			  __FILE__ " needs a bigger buffer. Perhaps it's "
-			 "time for a complete implementation of getline.\n");
-	exit (0);
-    }
-
-    return strlen (*lineptr);
-}
-#undef POORMANS_GETLINE_BUFFER_SIZE
-
-static char *
-strndup (const char *s,
-	 size_t      n)
-{
-    size_t len;
-    char *sdup;
-
-    if (!s)
-	return NULL;
-
-    len = strlen (s);
-    len = (n < len ? n : len);
-    sdup = (char *) malloc (len + 1);
-    if (sdup)
-    {
-	memcpy (sdup, s, len);
-	sdup[len] = '\0';
-    }
-
-    return sdup;
-}
-#endif /* ifndef __USE_GNU */
 
 /* We provide hereafter a win32 implementation of the basename
  * and strtoll functions which are not available otherwise.
@@ -423,11 +354,11 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report,
 		if (new_samples_count > base->samples_size) {
 		    base->samples_size = new_samples_count;
 		    base->samples = xrealloc (base->samples,
-					      base->samples_size * sizeof (cairo_perf_ticks_t));
+					      base->samples_size * sizeof (cairo_time_t));
 		}
 		for (t = base + 1; t < next; t++) {
 		    memcpy (&base->samples[base->samples_count], t->samples,
-			    t->samples_count * sizeof (cairo_perf_ticks_t));
+			    t->samples_count * sizeof (cairo_time_t));
 		    base->samples_count += t->samples_count;
 		}
 	    }
@@ -440,7 +371,7 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report,
 
 void
 cairo_perf_report_load (cairo_perf_report_t *report,
-			const char *filename,
+			const char *filename, int id,
 			int (*cmp) (const void *, const void *))
 {
     FILE *file;
@@ -457,11 +388,9 @@ cairo_perf_report_load (cairo_perf_report_t *report,
     if (name == NULL)
 	name = "stdin";
 
-    configuration = xmalloc (strlen (name) * sizeof (char) + 1);
-    strcpy (configuration, name);
+    configuration = xstrdup (name);
     baseName = basename (configuration);
-    report->configuration = xmalloc (strlen (baseName) * sizeof (char) + 1);
-    strcpy (report->configuration, baseName);
+    report->configuration = xstrdup (baseName);
     free (configuration);
 
     dot = strrchr (report->configuration, '.');
@@ -472,6 +401,7 @@ cairo_perf_report_load (cairo_perf_report_t *report,
     report->tests_size = 16;
     report->tests = xmalloc (report->tests_size * sizeof (test_report_t));
     report->tests_count = 0;
+    report->fileno = id;
 
     if (filename == NULL) {
 	file = stdin;
@@ -496,7 +426,7 @@ cairo_perf_report_load (cairo_perf_report_t *report,
 	    break;
 
 	status = test_report_parse (&report->tests[report->tests_count],
-				    line, report->configuration);
+				    id, line, report->configuration);
 	if (status == TEST_REPORT_STATUS_ERROR)
 	    fprintf (stderr, "Ignoring unrecognized line %d of %s:\n%s",
 		     line_number, filename, line);
@@ -505,8 +435,7 @@ cairo_perf_report_load (cairo_perf_report_t *report,
 	/* Do nothing on TEST_REPORT_STATUS_COMMENT */
     }
 
-    if (line)
-	free (line);
+    free (line);
 
     if (filename != NULL)
 	fclose (file);

@@ -26,7 +26,6 @@
 
 #include "cairo-test.h"
 
-#define ARRAY_LENGTH(x) (sizeof(x) / sizeof(x[0]))
 typedef enum {
   CLEAR,
   CLEARED,
@@ -129,7 +128,7 @@ static operation_t operations[] = {
     glyphs
 };
 
-    static cairo_test_status_t
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_content_t contents[] = { CAIRO_CONTENT_COLOR_ALPHA, CAIRO_CONTENT_COLOR, CAIRO_CONTENT_ALPHA };

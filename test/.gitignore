@@ -5,8 +5,8 @@ tags
 output
 Makefile
 Makefile.in
-index.html
 ref.hash
+ref.list
 any2ppm
 .any2ppm
 .any2ppm.pid

@@ -33,6 +33,11 @@
 #include "cairo-boilerplate-private.h"
 
 #include <cairo-gl.h>
+#if CAIRO_HAS_GL_SURFACE
+#include <GL/gl.h>
+#elif CAIRO_HAS_GLESV2_SURFACE
+#include <GLES2/gl2.h>
+#endif
 
 static const cairo_user_data_key_t gl_closure_key;
 
@@ -67,14 +72,32 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure)
 {
     egl_target_closure_t *gltc;
     cairo_surface_t *surface;
     int major, minor;
-    EGLConfig *configs;
+    EGLConfig config;
     EGLint numConfigs;
+    EGLint config_attribs[] = {
+	EGL_RED_SIZE, 8,
+	EGL_GREEN_SIZE, 8,
+	EGL_BLUE_SIZE, 8,
+	EGL_ALPHA_SIZE, 8,
+	EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+#if CAIRO_HAS_GL_SURFACE
+	EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+#elif CAIRO_HAS_GLESV2_SURFACE
+	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+#endif
+	EGL_NONE
+    };
+    const EGLint ctx_attribs[] = {
+#if CAIRO_HAS_GLESV2_SURFACE
+	EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
+	EGL_NONE
+    };
 
     gltc = xcalloc (1, sizeof (egl_target_closure_t));
     *closure = gltc;
@@ -86,17 +109,20 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
 	return NULL;
     }
 
-    eglGetConfigs (gltc->dpy, NULL, 0, &numConfigs);
+    eglChooseConfig (gltc->dpy, config_attribs, &config, 1, &numConfigs);
     if (numConfigs == 0) {
 	free (gltc);
 	return NULL;
     }
-    configs = xmalloc(sizeof(*configs) *numConfigs);
-    eglGetConfigs (gltc->dpy, configs, numConfigs, &numConfigs);
 
+#if CAIRO_HAS_GL_SURFACE
     eglBindAPI (EGL_OPENGL_API);
+#elif CAIRO_HAS_GLESV2_SURFACE
+    eglBindAPI (EGL_OPENGL_ES_API);
+#endif
 
-    gltc->ctx = eglCreateContext (gltc->dpy, configs[0], EGL_NO_CONTEXT, NULL);
+    gltc->ctx = eglCreateContext (gltc->dpy, config, EGL_NO_CONTEXT,
+				  ctx_attribs);
     if (gltc->ctx == EGL_NO_CONTEXT) {
 	eglTerminate (gltc->dpy);
 	free (gltc);
@@ -104,6 +130,11 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
     }
 
     gltc->device = cairo_egl_device_create (gltc->dpy, gltc->ctx);
+
+    if (width < 1)
+	width = 1;
+    if (height < 1)
+	height = 1;
 
     gltc->surface = surface = cairo_gl_surface_create (gltc->device,
 						       content,
@@ -134,6 +165,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_GL, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_egl_device_create",
 	_cairo_boilerplate_egl_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,

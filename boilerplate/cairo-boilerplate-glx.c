@@ -74,7 +74,6 @@ _cairo_boilerplate_gl_create_surface (const char		*name,
 				      double			 max_width,
 				      double			 max_height,
 				      cairo_boilerplate_mode_t	 mode,
-				      int			 id,
 				      void		       **closure)
 {
     int rgba_attribs[] = { GLX_RGBA,
@@ -98,6 +97,9 @@ _cairo_boilerplate_gl_create_surface (const char		*name,
 
     gltc = calloc (1, sizeof (gl_target_closure_t));
     *closure = gltc;
+
+    width = ceil (width);
+    height = ceil (height);
 
     if (width == 0)
 	width = 1;
@@ -134,9 +136,7 @@ _cairo_boilerplate_gl_create_surface (const char		*name,
     gltc->device = cairo_glx_device_create (dpy, ctx);
 
     gltc->surface = surface = cairo_gl_surface_create (gltc->device,
-						       content,
-						       ceil (width),
-						       ceil (height));
+						       content, width, height);
     if (cairo_surface_status (surface))
 	_cairo_boilerplate_gl_cleanup (gltc);
 
@@ -144,14 +144,13 @@ _cairo_boilerplate_gl_create_surface (const char		*name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_gl_create_window (const char 	       *name,
+_cairo_boilerplate_gl_create_window (const char		       *name,
 				     cairo_content_t		content,
 				     double			width,
 				     double			height,
 				     double			max_width,
 				     double			max_height,
 				     cairo_boilerplate_mode_t	mode,
-				     int			id,
 				     void		      **closure)
 {
     int rgba_attribs[] = { GLX_RGBA,
@@ -170,6 +169,9 @@ _cairo_boilerplate_gl_create_window (const char 	       *name,
 
     gltc = calloc (1, sizeof (gl_target_closure_t));
     *closure = gltc;
+
+    width = ceil (width);
+    height = ceil (height);
 
     if (width == 0)
 	width = 1;
@@ -216,8 +218,7 @@ _cairo_boilerplate_gl_create_window (const char 	       *name,
 
     gltc->surface = surface = cairo_gl_surface_create_for_window (gltc->device,
 								  gltc->drawable,
-								  ceil (width),
-								  ceil (height));
+								  width, height);
     if (cairo_surface_status (surface))
 	_cairo_boilerplate_gl_cleanup (gltc);
 
@@ -226,13 +227,12 @@ _cairo_boilerplate_gl_create_window (const char 	       *name,
 
 static cairo_surface_t *
 _cairo_boilerplate_gl_create_window_db (const char		  *name,
-					cairo_content_t 	   content,
+					cairo_content_t		   content,
 					double			   width,
 					double			   height,
 					double			   max_width,
 					double			   max_height,
 					cairo_boilerplate_mode_t   mode,
-					int			   id,
 					void			 **closure)
 {
     int rgba_attribs[] = { GLX_RGBA,
@@ -252,6 +252,9 @@ _cairo_boilerplate_gl_create_window_db (const char		  *name,
 
     gltc = calloc (1, sizeof (gl_target_closure_t));
     *closure = gltc;
+
+    width = ceil (width);
+    height = ceil (height);
 
     if (width == 0)
 	width = 1;
@@ -298,8 +301,7 @@ _cairo_boilerplate_gl_create_window_db (const char		  *name,
 
     gltc->surface = cairo_gl_surface_create_for_window (gltc->device,
 							gltc->drawable,
-							ceil (width),
-							ceil (height));
+							width, height);
     surface = cairo_surface_create_similar (gltc->surface, content, width, height);
     status = cairo_surface_set_user_data (surface, &gl_closure_key, gltc, NULL);
     if (status == CAIRO_STATUS_SUCCESS)
@@ -373,6 +375,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_GL, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_gl_surface_create",
 	_cairo_boilerplate_gl_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -386,6 +389,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_GL, CAIRO_CONTENT_COLOR, 1,
 	"cairo_gl_surface_create",
 	_cairo_boilerplate_gl_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -399,6 +403,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_GL, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_gl_surface_create_for_window",
 	_cairo_boilerplate_gl_create_window,
+	cairo_surface_create_similar,
 	NULL,
 	_cairo_boilerplate_gl_finish_window,
 	_cairo_boilerplate_get_image_surface,
@@ -413,6 +418,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_GL, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_gl_surface_create_for_window",
 	_cairo_boilerplate_gl_create_window_db,
+	cairo_surface_create_similar,
 	NULL,
 	_cairo_boilerplate_gl_finish_window,
 	_cairo_boilerplate_get_image_surface,

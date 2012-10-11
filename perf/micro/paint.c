@@ -25,7 +25,7 @@
 
 #include "cairo-perf.h"
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_paint (cairo_t *cr, int width, int height, int loops)
 {
     cairo_perf_timer_start ();
@@ -44,11 +44,14 @@ count_paint (cairo_t *cr, int width, int height)
     return width * height / 1e6; /* Mpix/s */
 }
 
+cairo_bool_t
+paint_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "paint", NULL);
+}
+
 void
 paint (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "paint", NULL))
-	return;
-
     cairo_perf_cover_sources_and_operators (perf, "paint", do_paint, count_paint);
 }

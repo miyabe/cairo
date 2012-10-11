@@ -109,7 +109,6 @@ _cairo_boilerplate_wgl_create_surface (const char		 *name,
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure)
 {
     wgl_target_closure_t *wgltc;
@@ -146,7 +145,6 @@ _cairo_boilerplate_wgl_for_create_window (const char		    *name,
 					  double		     max_width,
 					  double		     max_height,
 					  cairo_boilerplate_mode_t   mode,
-					  int			     id,
 					  void			   **closure)
 {
     wgl_target_closure_t *wgltc;
@@ -213,6 +211,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_GL, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_gl_surface_create",
 	_cairo_boilerplate_wgl_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,

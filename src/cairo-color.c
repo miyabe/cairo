@@ -77,19 +77,6 @@ _cairo_stock_color (cairo_stock_t stock)
     }
 }
 
-void
-_cairo_color_init (cairo_color_t *color)
-{
-    *color = cairo_color_white;
-}
-
-void
-_cairo_color_init_rgb (cairo_color_t *color,
-		       double red, double green, double blue)
-{
-    _cairo_color_init_rgba (color, red, green, blue, 1.0);
-}
-
 /* Convert a double in [0.0, 1.0] to an integer in [0, 65535]
  * The conversion is designed to divide the input range into 65536
  * equally-sized regions. This is achieved by multiplying by 65536 and
@@ -185,30 +172,13 @@ cairo_bool_t
 _cairo_color_stop_equal (const cairo_color_stop_t *color_a,
 			 const cairo_color_stop_t *color_b)
 {
-    uint16_t a, b;
-
     if (color_a == color_b)
 	return TRUE;
 
-    if (color_a->alpha_short != color_b->alpha_short)
-	return FALSE;
-
-    a   = _cairo_color_double_to_short (color_a->red   * color_a->alpha);
-    b   = _cairo_color_double_to_short (color_b->red   * color_b->alpha);
-    if (a != b)
-	return FALSE;
-
-    a   = _cairo_color_double_to_short (color_a->green   * color_a->alpha);
-    b   = _cairo_color_double_to_short (color_b->green   * color_b->alpha);
-    if (a != b)
-	return FALSE;
-
-    a   = _cairo_color_double_to_short (color_a->blue   * color_a->alpha);
-    b   = _cairo_color_double_to_short (color_b->blue   * color_b->alpha);
-    if (a != b)
-	return FALSE;
-
-    return TRUE;
+    return color_a->alpha_short == color_b->alpha_short &&
+           color_a->red_short   == color_b->red_short   &&
+           color_a->green_short == color_b->green_short &&
+           color_a->blue_short  == color_b->blue_short;
 }
 
 cairo_content_t

@@ -80,9 +80,13 @@
 #if CAIRO_HAS_QUARTZ_SURFACE
 #define Cursor QuartzCursor
 #include <cairo-quartz.h>
+#undef Cursor
 #endif
 #if CAIRO_HAS_SVG_SURFACE
 #include <cairo-svg.h>
+#endif
+#if CAIRO_HAS_TEE_SURFACE
+#include <cairo-tee.h>
 #endif
 #if CAIRO_HAS_XCB_SURFACE
 #include <cairo-xcb.h>
@@ -90,9 +94,9 @@
 #if CAIRO_HAS_XLIB_SURFACE
 #define Cursor XCursor
 #include <cairo-xlib.h>
+#undef Cursor
 #endif
 
-#define ARRAY_LENGTH(array) (sizeof (array) / sizeof ((array)[0]))
 #define surface_has_type(surface,type) (cairo_surface_get_type (surface) == (type))
 
 typedef cairo_test_status_t (* surface_test_func_t) (cairo_surface_t *surface);
@@ -387,6 +391,8 @@ test_cairo_recording_surface_ink_extents (cairo_surface_t *surface)
     return x == 0 && y == 0 && w == 0 && h == 0 ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
 }
 
+#if CAIRO_HAS_TEE_SURFACE
+
 static cairo_test_status_t
 test_cairo_tee_surface_add (cairo_surface_t *surface)
 {
@@ -418,6 +424,8 @@ test_cairo_tee_surface_index (cairo_surface_t *surface)
     cairo_surface_destroy (master);
     return status ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
 }
+
+#endif /* CAIRO_HAS_TEE_SURFACE */
 
 #if CAIRO_HAS_GL_SURFACE
 
@@ -553,6 +561,13 @@ test_cairo_xcb_surface_set_size (cairo_surface_t *surface)
     return CAIRO_TEST_SUCCESS;
 }
 
+static cairo_test_status_t
+test_cairo_xcb_surface_set_drawable (cairo_surface_t *surface)
+{
+    cairo_xcb_surface_set_drawable (surface, 0, 5, 5);
+    return CAIRO_TEST_SUCCESS;
+}
+
 #endif
 
 #if CAIRO_HAS_XLIB_SURFACE
@@ -664,9 +679,11 @@ struct {
     TEST (cairo_surface_write_to_png_stream, -1, FALSE),
 #endif
     TEST (cairo_recording_surface_ink_extents, CAIRO_SURFACE_TYPE_RECORDING, FALSE),
+#if CAIRO_HAS_TEE_SURFACE
     TEST (cairo_tee_surface_add, CAIRO_SURFACE_TYPE_TEE, TRUE),
     TEST (cairo_tee_surface_remove, CAIRO_SURFACE_TYPE_TEE, TRUE),
     TEST (cairo_tee_surface_index, CAIRO_SURFACE_TYPE_TEE, FALSE),
+#endif
 #if CAIRO_HAS_GL_SURFACE
     TEST (cairo_gl_surface_set_size, CAIRO_SURFACE_TYPE_GL, TRUE),
     TEST (cairo_gl_surface_get_width, CAIRO_SURFACE_TYPE_GL, FALSE),
@@ -694,6 +711,7 @@ struct {
 #endif
 #if CAIRO_HAS_XCB_SURFACE
     TEST (cairo_xcb_surface_set_size, CAIRO_SURFACE_TYPE_XCB, TRUE),
+    TEST (cairo_xcb_surface_set_drawable, CAIRO_SURFACE_TYPE_XCB, TRUE),
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
     TEST (cairo_xlib_surface_set_size, CAIRO_SURFACE_TYPE_XLIB, TRUE),

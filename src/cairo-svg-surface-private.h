@@ -71,7 +71,7 @@ typedef struct cairo_svg_surface {
 
     cairo_bool_t force_fallbacks;
 } cairo_svg_surface_t;
-
+ 
 typedef struct _cairo_svg_fontfile {
 	char *path;
 	cairo_scaled_font_subsets_t *font_subsets;

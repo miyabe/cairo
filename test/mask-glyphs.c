@@ -43,13 +43,11 @@ _image_to_glyphs (cairo_surface_t *image,
 {
     int width, height, stride;
     const unsigned char *data;
-    cairo_format_t format;
     int x, y, z, n;
 
     width = cairo_image_surface_get_width (image);
     height = cairo_image_surface_get_height (image);
     stride = cairo_image_surface_get_stride (image);
-    format = cairo_image_surface_get_format (image);
     data = cairo_image_surface_get_data (image);
 
     n = 0;
@@ -128,7 +126,7 @@ _render_image (cairo_t *cr,
     cairo_set_font_size (cr, 5);
     scaled_font = cairo_get_scaled_font (cr);
 
-    for (i = 0; i < sizeof (channel) / sizeof (channel[0]); i++) {
+    for (i = 0; i < ARRAY_LENGTH (channel); i++) {
 	cairo_push_group_with_content (cr, CAIRO_CONTENT_ALPHA);
 	for (n = 0; n < 256; n++) {
 	    cairo_status_t status;

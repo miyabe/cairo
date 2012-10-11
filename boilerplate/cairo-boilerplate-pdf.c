@@ -36,6 +36,10 @@
 #include <signal.h>
 #endif
 
+#if HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+
 #if ! CAIRO_HAS_RECORDING_SURFACE
 #define CAIRO_SURFACE_TYPE_RECORDING CAIRO_INTERNAL_SURFACE_TYPE_RECORDING
 #endif
@@ -60,7 +64,6 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure)
 {
     pdf_target_closure_t *ptc;
@@ -219,7 +222,8 @@ _cairo_boilerplate_pdf_cleanup (void *closure)
 
 static void
 _cairo_boilerplate_pdf_force_fallbacks (cairo_surface_t *abstract_surface,
-					unsigned int	 flags)
+				       double		 x_pixels_per_inch,
+				       double		 y_pixels_per_inch)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (abstract_surface,
 							     &pdf_closure_key);
@@ -233,17 +237,19 @@ _cairo_boilerplate_pdf_force_fallbacks (cairo_surface_t *abstract_surface,
     paginated = (cairo_paginated_surface_t*) abstract_surface;
     surface = (cairo_pdf_surface_t*) paginated->target;
     surface->force_fallbacks = TRUE;
+    cairo_surface_set_fallback_resolution (&paginated->base,
+					   x_pixels_per_inch,
+					   y_pixels_per_inch);
 }
-#endif
 
 static const cairo_boilerplate_target_t targets[] = {
-#if CAIRO_CAN_TEST_PDF_SURFACE
     {
 	"pdf", "pdf", ".pdf", NULL,
 	CAIRO_SURFACE_TYPE_PDF,
 	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
 	"cairo_pdf_surface_create",
 	_cairo_boilerplate_pdf_create_surface,
+	cairo_surface_create_similar,
 	_cairo_boilerplate_pdf_force_fallbacks,
 	_cairo_boilerplate_pdf_finish_surface,
 	_cairo_boilerplate_pdf_get_image_surface,
@@ -256,6 +262,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR, 0,
 	"cairo_pdf_surface_create",
 	_cairo_boilerplate_pdf_create_surface,
+	cairo_surface_create_similar,
 	_cairo_boilerplate_pdf_force_fallbacks,
 	_cairo_boilerplate_pdf_finish_surface,
 	_cairo_boilerplate_pdf_get_image_surface,
@@ -263,6 +270,11 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_pdf_cleanup,
 	NULL, NULL, FALSE, TRUE, TRUE
     },
-#endif
 };
 CAIRO_BOILERPLATE (pdf, targets)
+
+#else
+
+CAIRO_NO_BOILERPLATE (pdf)
+
+#endif

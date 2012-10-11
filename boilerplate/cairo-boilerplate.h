@@ -45,6 +45,7 @@
 #elif HAVE_SYS_INT_TYPES_H
 # include <sys/int_types.h>
 #elif defined(_MSC_VER)
+# include <stdint.h>
   typedef __int8 int8_t;
   typedef unsigned __int8 uint8_t;
   typedef __int16 int16_t;
@@ -123,12 +124,18 @@ typedef cairo_surface_t *
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure);
+
+typedef cairo_surface_t *
+(*cairo_boilerplate_create_similar_t) (cairo_surface_t		 *other,
+				       cairo_content_t		  content,
+				       int			  width,
+				       int			  height);
 
 typedef void
 (*cairo_boilerplate_force_fallbacks_t) (cairo_surface_t *surface,
-					unsigned int flags);
+				       double		 x_pixels_per_inch,
+				       double		 y_pixels_per_inch);
 
 typedef cairo_status_t
 (*cairo_boilerplate_finish_surface_t) (cairo_surface_t *surface);
@@ -162,11 +169,12 @@ typedef struct _cairo_boilerplate_target {
     unsigned int				 error_tolerance;
     const char					*probe; /* runtime dl check */
     cairo_boilerplate_create_surface_t		 create_surface;
-    cairo_boilerplate_force_fallbacks_t 	 force_fallbacks;
+    cairo_boilerplate_create_similar_t		 create_similar;
+    cairo_boilerplate_force_fallbacks_t		 force_fallbacks;
     cairo_boilerplate_finish_surface_t		 finish_surface;
     cairo_boilerplate_get_image_surface_t	 get_image_surface;
     cairo_boilerplate_write_to_png_t		 write_to_png;
-    cairo_boilerplate_cleanup_t 		 cleanup;
+    cairo_boilerplate_cleanup_t			 cleanup;
     cairo_boilerplate_wait_t			 synchronize;
     cairo_boilerplate_describe_t                 describe;
     cairo_bool_t				 is_measurable;
@@ -209,7 +217,9 @@ enum {
 FILE *
 cairo_boilerplate_open_any2ppm (const char   *filename,
 				int	      page,
-				unsigned int  flags);
+				unsigned int  flags,
+				int        (**close_cb) (FILE *));
+
 cairo_surface_t *
 cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file);
 
